@@ -1,7 +1,8 @@
 import { eq } from 'drizzle-orm';
 import { getDb } from '@/db';
 import { queryCache } from '@/db/schema';
-import { getSettings, HttpError, requireOwner, responseError, runtimeValue } from '@/lib/server';
+import { getApps, getSettings, HttpError, requireOwner, responseError, runtimeValue } from '@/lib/server';
+import { appIdPattern } from '@/lib/app-config';
 import type { DataResponse, OrbitEvent } from '@/lib/types';
 import { cleanProperties } from '@/packages/sdk/src/privacy';
 import { readPostHogJson } from '@/lib/posthog-response';
@@ -12,11 +13,14 @@ export async function GET(request: Request) {
     if (!secret || !settings.projectId) throw new HttpError(409, 'Connect PostHog in Settings to load your real analytics.');
     const url = new URL(request.url); const days = Number(url.searchParams.get('days') || 30); if (![7, 30, 90].includes(days)) throw new HttpError(400, 'Invalid date range.');
     const app = url.searchParams.get('app') || ''; if (app && !/^[a-z][a-z0-9-]{1,47}$/.test(app)) throw new HttpError(400, 'Invalid app ID.');
-    const key = `v2:${owner}:${settings.region}:${settings.projectId}:${days}:${app}`;
-    const cached = await getDb().select().from(queryCache).where(eq(queryCache.key, key)).get();
+    const registered = (await getApps(owner)).map(a => a.id).filter(id => appIdPattern.test(id)).sort();
+    if (app && !registered.includes(app)) throw new HttpError(404, 'Register this application in your workspace first.');
+    const key = `v3:${owner}:${settings.region}:${settings.projectId}:${days}:${app}:${registered.join(',')}`;
+    const cached = url.searchParams.get('refresh') === '1' ? undefined : await getDb().select().from(queryCache).where(eq(queryCache.key, key)).get();
     if (cached && cached.expiresAt > Date.now()) return Response.json({ ...JSON.parse(cached.payload), cached: true }, { headers: { 'Cache-Control': 'private, no-store' } });
     const from = new Date(Date.now() - Math.max(days * 2, 90) * 86400000).toISOString(); const to = new Date().toISOString();
-    const query = `SELECT uuid, event, distinct_id, timestamp, properties, person_id FROM events WHERE timestamp >= toDateTime('${from.slice(0, 19).replace('T', ' ')}') AND properties.app_id IS NOT NULL AND properties.environment = 'production' ${app ? `AND properties.app_id = '${app}'` : ''} ORDER BY timestamp DESC LIMIT 50000`;
+    const appFilter = app ? `properties.app_id = '${app}'` : registered.length ? `properties.app_id IN (${registered.map(id => `'${id}'`).join(',')})` : '1 = 0';
+    const query = `SELECT uuid, event, distinct_id, timestamp, properties, person_id FROM events WHERE timestamp >= toDateTime('${from.slice(0, 19).replace('T', ' ')}') AND properties.environment = 'production' AND ${appFilter} ORDER BY timestamp DESC LIMIT 50000`;
     const result = await fetch(`https://${settings.region}.posthog.com/api/projects/${settings.projectId}/query/`, { method: 'POST', headers: { Authorization: `Bearer ${secret}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ query: { kind: 'HogQLQuery', query }, name: 'Orbit workspace analytics' }), signal: AbortSignal.timeout(25000) });
     if (!result.ok) { if ([401, 403].includes(result.status)) throw new HttpError(502, 'PostHog access was denied. Check your project ID, region, and read-key permissions.'); if (result.status === 429) throw new HttpError(429, 'PostHog is rate limiting requests. Wait a moment and refresh.'); throw new HttpError(502, 'PostHog could not run this query. Try again shortly.'); }
     let body: { results?: unknown[][]; query_status?: { complete?: boolean } };

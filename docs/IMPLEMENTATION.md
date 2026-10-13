@@ -7,7 +7,9 @@
 | `components/orbit/overview.tsx` | Metrics, data-derived charts/sparklines, portfolio and activity stream. |
 | `components/orbit/activity.tsx` | Events, details, transactions and source attribution. |
 | `components/orbit/audiences.tsx` | Ordered funnels, saved journeys and mature-cohort retention. |
-| `components/orbit/apps.tsx` | App registration, editing, archive and restore. |
+| `components/orbit/apps.tsx`, `components/orbit/app-form.tsx` | Application portfolio, guided registration, review, completion, editing, archive and restore. |
+| `app/polish.css` | Readable typography, shared surfaces, first-run guidance and responsive onboarding. |
+| `lib/app-config.ts`, `lib/app-schema.ts` | Canonical domains, safe generated IDs, network labels and shared server validation. |
 | `components/orbit/integration.tsx` | App-specific SDK examples, downloads and event catalog. |
 | `components/orbit/settings.tsx` | Persisted workspace settings and connection diagnostics. |
 | `components/orbit/ui.tsx` | Accessible dialogs, controls, exports and API client. |
@@ -30,6 +32,10 @@ source of truth. `POSTHOG_PERSONAL_API_KEY` stays on the server. Anonymous-to-wa
 stitching uses HogQL's resolved `person_id`. No personal profile properties are queried.
 The private Site enforces owner access; mutations additionally check identity and
 same-origin requests. Mini apps send directly to PostHog, not to the private dashboard.
+Queries include only app IDs registered in the owner's workspace. Archived app
+history remains available. Manual refresh and integration checks bypass the short-lived
+cache. Displayed ranges use inclusive UTC calendar days with non-overlapping previous
+periods.
 
 ## Operational limits
 

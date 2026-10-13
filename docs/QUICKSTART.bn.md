@@ -16,10 +16,14 @@ Workspace-এ শুধু নিজের নিবন্ধিত অ্যা
 ৩. এই Site-এর server secret হিসেবে `POSTHOG_PERSONAL_API_KEY` configure করো।
    এটি সংশ্লিষ্ট PostHog project-এর `query:read` scoped key হবে; frontend-এ যাবে না।
 ৪. Orbit-এ নিজের app register করো।
+   `Connect app`-এ নাম ও URL দাও, `Review application` দিয়ে যাচাই করে
+   `Add application` চাপো। App ID নিজে তৈরি হবে। `Customize application` থেকে
+   নিজের ID, network, category ও color বেছে নিতে পারবে।
 ৫. Integration guide থেকে SDK download করে অ্যাপে বসাও। Wallet ও transaction-এর
    বর্তমান code-এর সঙ্গে guide-এর example যুক্ত করো।
 ৬. PostHog Activity → Live events-এ event ও `app_id` যাচাই করো। তারপর Orbit-এর
    Production workspace দেখো। Dashboard শুধু `environment: 'production'` events পড়ে।
+   Integration guide-এর `Check for events` দিয়ে নিজের অ্যাপের event যাচাই করতে পারবে।
 
 Swap, mint, deposit, stake, transfer, approve, vote, bridge, purchase, claim কিংবা
 অন্য contract action-এর জন্য একই `trackTransaction` ব্যবহার করা যাবে। Contact form

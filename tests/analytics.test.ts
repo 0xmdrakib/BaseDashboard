@@ -1,10 +1,19 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { acquisition, funnel, metrics, retention, selectEvents, toCsv, transactions, trend } from '../lib/analytics';
+import { acquisition, funnel, metrics, periodBounds, retention, selectEvents, toCsv, transactions, trend } from '../lib/analytics';
 import type { OrbitEvent } from '../lib/types';
 import { readPostHogJson } from '../lib/posthog-response';
 const address = '0x' + 'a'.repeat(40);
 const hash = '0x' + 'b'.repeat(64);
+test('calendar date ranges include exactly the displayed UTC days and do not overlap', () => {
+  const bounds = periodBounds(7, new Date('2026-10-13T18:25:00Z'));
+  assert.equal(bounds.start.toISOString(), '2026-10-07T00:00:00.000Z');
+  assert.equal(bounds.previousStart.toISOString(), '2026-09-30T00:00:00.000Z');
+  assert.equal(bounds.previousEnd.getTime() + 1, bounds.start.getTime());
+  const rows = [event('app_opened', '2026-10-06T23:59:59Z'), event('app_opened', '2026-10-07T00:00:00Z'), event('app_opened', '2026-10-13T18:26:00Z')];
+  assert.equal(selectEvents(rows, '', bounds.start, bounds.end).length, 1);
+  assert.equal(selectEvents(rows, '', bounds.previousStart, bounds.previousEnd).length, 1);
+});
 function event(name: string, time = '2026-01-01T12:00:00Z', appId = 'app-a', distinctId = address, properties: OrbitEvent['properties'] = {}): OrbitEvent { return { id: `${name}-${time}-${appId}`, event: name, appId, distinctId, timestamp: time, properties }; }
 test('active wallets are case-normalized and exclude anonymous visitors', () => { assert.equal(metrics([event('app_opened'), event('wallet_connected', undefined, undefined, address.toUpperCase().replace('0X', '0x')), event('app_opened', undefined, undefined, 'anonymous')]).wallets, 1); });
 test('success rate excludes unresolved submissions', () => { const m = metrics([event('tx_submitted'), event('tx_confirmed'), event('tx_failed'), event('tx_submitted')]); assert.equal(m.success, 50); assert.equal(m.submitted, 2); });

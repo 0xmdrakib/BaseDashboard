@@ -12,6 +12,11 @@ test('cross-origin app writes are rejected', async () => { assert.equal((await c
 test('malformed app IDs are rejected', async () => { assert.equal((await call('/api/apps', 'POST', { ...app, id: "bad'app" })).status, 400); });
 test('domain credentials and query strings are rejected', async () => { assert.equal((await call('/api/apps', 'POST', { ...app, domain: 'https://user:pass@example.com/?email=private' })).status, 400); });
 test('an application can be registered and retrieved', async () => { assert.equal((await call('/api/apps', 'POST', app)).status, 201); const c = await (await call('/api/config')).json(); assert.ok(c.apps.some(a => a.id === app.id && a.name === app.name)); });
+test('pasted URLs are stored as domains and custom chain IDs persist', async () => {
+  assert.equal((await call('/api/apps', 'PATCH', { ...app, domain: 'https://APP.example.com/mint?private=value#connect', chainId: 999 })).status, 200);
+  const config = await (await call('/api/config')).json(); const saved = config.apps.find(a => a.id === app.id);
+  assert.equal(saved.domain, 'app.example.com'); assert.equal(saved.chainId, 999); assert.equal(saved.id, app.id);
+});
 test('duplicate app IDs are rejected', async () => { assert.equal((await call('/api/apps', 'POST', app)).status, 409); });
 test('application updates preserve identity and archive is reversible', async () => { assert.equal((await call('/api/apps', 'PATCH', { ...app, archived: true })).status, 200); let c = await (await call('/api/config')).json(); assert.equal(c.apps.find(a => a.id === app.id).archived, true); assert.equal((await call('/api/apps', 'PATCH', app)).status, 200); });
 test('settings reject a private token in the public token field', async () => { assert.equal((await call('/api/settings', 'PUT', { ...original, publicKey: 'phx_private_never_save' })).status, 400); });

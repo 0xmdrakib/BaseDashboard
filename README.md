@@ -23,6 +23,11 @@ Hosted authentication is platform-owned; the Site is private.
 
 ## Connect PostHog
 
+Use **Connect app** to enter an application name and URL. Orbit suggests a unique
+tracking ID; expand **Customize application** for your category, network, color or
+custom ID. Review, add the app, then open its personalized integration guide.
+Full URLs are normalized to domains and paths/query strings are discarded.
+
 1. Create or select your PostHog project.
 2. Save project ID, region and **public** project token in Orbit Settings.
 3. Configure `POSTHOG_PERSONAL_API_KEY` as a **secret runtime environment variable**

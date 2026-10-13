@@ -1,5 +1,10 @@
 import { walletPattern, type OrbitEvent } from './types';
 export const dayMs = 86400000;
+export function periodBounds(days: number, now = new Date()) {
+  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const start = new Date(today - (days - 1) * dayMs);
+  return { start, end: now, previousStart: new Date(start.getTime() - days * dayMs), previousEnd: new Date(start.getTime() - 1) };
+}
 export const number = (n: number) => new Intl.NumberFormat('en-US').format(n);
 export const compact = (n: number) => new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(n);
 export const percent = (n: number) => `${n.toFixed(1)}%`;
