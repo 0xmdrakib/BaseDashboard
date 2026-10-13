@@ -1,0 +1,10 @@
+import { build } from 'esbuild';
+import { spawnSync } from 'node:child_process';
+await build({ entryPoints: ['packages/sdk/src/index.ts', 'packages/sdk/src/react.ts'], bundle: true, format: 'esm', outdir: 'packages/sdk/dist', external: ['posthog-js', 'react'], target: 'es2020', minify: true });
+await build({ entryPoints: ['packages/sdk/src/index.ts'], bundle: true, format: 'iife', globalName: 'OrbitAnalytics', outfile: 'public/sdk/orbit.js', target: 'es2020', minify: true });
+const result = spawnSync(process.execPath, ['node_modules/typescript/bin/tsc', '-p', 'packages/sdk/tsconfig.json'], { stdio: 'inherit' });
+if (result.status) process.exit(result.status);
+if (!process.env.npm_execpath) throw new Error('Run with npm run sdk:build or npm run build.');
+const packed = spawnSync(process.execPath, [process.env.npm_execpath, 'pack', './packages/sdk', '--pack-destination', './public/sdk', '--silent'], { stdio: 'inherit' });
+if (packed.status) process.exit(packed.status);
+console.log('Orbit browser bundle and typed SDK built.');

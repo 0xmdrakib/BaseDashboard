@@ -1,0 +1,43 @@
+'use client';
+import { useMemo, useState } from 'react';
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { ArrowUpRight, ArrowRight, Wallet, ArrowLeftRight, MousePointer2, CircleCheck, Layers, Sparkles, Globe, ChevronRight } from 'lucide-react';
+import { Card, CardHead, Delta, AppName, Badge, Empty, timeAgo, type Workspace } from './ui';
+import { compact, delta, metrics, number, percent, trend } from '@/lib/analytics';
+export function Overview({ w }: { w: Workspace }) {
+  const current = useMemo(() => metrics(w.events), [w.events]); const prev = useMemo(() => metrics(w.previous), [w.previous]);
+  const chart = useMemo(() => trend(w.events, w.days), [w.events, w.days]); const [chartTab, setChartTab] = useState<'wallets' | 'transactions'>('wallets');
+  const appMetrics = w.apps.filter(a => !a.archived).map(a => ({ app: a, ...metrics(w.events.filter(e => e.appId === a.id)) })).sort((a, b) => b.events - a.events);
+  const total = appMetrics.reduce((sum, a) => sum + a.events, 0);
+  const points = (values: number[]) => { const max = Math.max(...values, 1); const min = Math.min(...values, 0); return values.map((v, i) => `${8 + i / Math.max(values.length - 1, 1) * 99},${31 - (v - min) / Math.max(max - min, 1) * 27}`).join(' '); };
+  const stats = [
+    { label: 'Active wallets', value: number(current.wallets), change: delta(current.wallets, prev.wallets), icon: Wallet, spark: points(chart.map(d => d.wallets)) },
+    { label: 'Confirmed transactions', value: number(current.confirmed), change: delta(current.confirmed, prev.confirmed), icon: ArrowLeftRight, spark: points(chart.map(d => d.transactions)) },
+    { label: 'Total events', value: compact(current.events), change: delta(current.events, prev.events), icon: MousePointer2, spark: points(chart.map(d => d.events)) },
+    { label: 'Transaction success', value: percent(current.success), change: prev.success ? delta(current.success, prev.success) : null, icon: CircleCheck, spark: points(chart.map(d => d.success)) },
+  ];
+  return <>
+    <div className="stat-grid">{stats.map(s => <Card className="stat-card" key={s.label}><div className="stat-label">{s.label}<s.icon size={16} /></div><div className="stat-value-row"><strong>{s.value}</strong><svg className="sparkline" viewBox="0 0 115 36" aria-hidden="true"><polyline points={s.spark} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg></div><div className="stat-foot"><Delta value={s.change} /><span>vs. previous {w.days} days</span></div></Card>)}</div>
+    <div className="overview-charts">
+      <Card className="activity-chart"><CardHead title="Ecosystem activity" subtitle="Small interactions. A bigger picture." action={<div className="segmented"><button className={chartTab === 'wallets' ? 'selected' : ''} onClick={() => setChartTab('wallets')}>Wallets</button><button className={chartTab === 'transactions' ? 'selected' : ''} onClick={() => setChartTab('transactions')}>Transactions</button></div>} />
+        <div className="chart-summary"><strong>{number(chartTab === 'wallets' ? current.wallets : current.confirmed)}</strong><span>{chartTab === 'wallets' ? 'unique active wallets' : 'confirmed transactions'} in this period</span><span className="legend"><i />{chartTab === 'wallets' ? 'Daily active wallets' : 'Daily confirmed transactions'}</span></div>
+        <div className="chart-box" role="img" aria-label="Daily ecosystem activity over the selected period">{w.allEvents.length > 0 && <ResponsiveContainer width="100%" height="100%"><AreaChart data={chart} margin={{ top: 8, right: 12, bottom: 0, left: -20 }}><defs><linearGradient id="activity-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#168779" stopOpacity={0.2} /><stop offset="98%" stopColor="#168779" stopOpacity={0} /></linearGradient></defs><CartesianGrid vertical={false} stroke="#edf0ee" strokeDasharray="3 4" /><XAxis dataKey="date" axisLine={false} tickLine={false} minTickGap={48} tick={{ fill: '#8a9390', fontSize: 11 }} dy={10} /><YAxis axisLine={false} tickLine={false} tick={{ fill: '#8a9390', fontSize: 11 }} /><Tooltip contentStyle={{ border: '1px solid #e5ebe7', borderRadius: 12, fontSize: 12, boxShadow: '0 5px 20px #16312b10' }} /><Area type="monotone" dataKey={chartTab} name={chartTab === 'wallets' ? 'Active wallets' : 'Confirmed transactions'} stroke="#168779" strokeWidth={2.5} fill="url(#activity-fill)" /></AreaChart></ResponsiveContainer>}</div>
+        <div className="chart-caption"><span className="dot" />Daily totals · UTC<span>Compared with the previous period</span></div>
+      </Card>
+      <Card className="distribution"><CardHead title="Your ecosystem" subtitle="Activity across your apps" action={<Layers size={17} className="muted" />} />
+        <div className="donut-wrap"><div className="donut" style={{ background: total ? `conic-gradient(${appMetrics.reduce((acc, a, i, arr) => { const before = arr.slice(0, i).reduce((s, x) => s + x.events, 0) / total * 100; return [...acc, `${a.app.color} ${before}% ${before + a.events / total * 100}%`]; }, [] as string[]).join(',')})` : '#e6ebe7' }}><div><strong>{appMetrics.filter(a => a.events > 0).length.toString().padStart(2, '0')}</strong><span>active apps</span></div></div><span className="donut-orbit one" /><span className="donut-orbit two" /></div>
+        <div className="distribution-list">{appMetrics.slice(0, 4).map(a => <button key={a.app.id} onClick={() => w.setAppId(a.app.id)}><span><i style={{ background: a.app.color }} />{a.app.name}</span><b>{total ? (a.events / total * 100).toFixed(1) : 0}%</b></button>)}</div>
+        <button className="text-button distribution-link" onClick={() => w.setView('Apps')}>Manage your apps<ArrowRight size={14} /></button>
+      </Card>
+    </div>
+    <div className="overview-bottom">
+      <Card className="apps-table"><CardHead title="App performance" subtitle="One workspace. Every app in focus." action={<button className="text-button" onClick={() => w.setView('Apps')}>View all apps<ArrowUpRight size={14} /></button>} />
+        {appMetrics.length ? <div className="table-scroll"><table><thead><tr><th>Application</th><th>Active wallets</th><th>Transactions</th><th>Success rate</th><th>Activity</th></tr></thead><tbody>{appMetrics.map(a => { const daily = trend(w.events.filter(e => e.appId === a.app.id), 10).map(d => d.events); const max = Math.max(...daily, 1); return <tr key={a.app.id}><td><button className="app-row-link" onClick={() => { w.setAppId(a.app.id); w.setView('Events'); }}><AppName id={a.app.id} apps={w.apps} /></button><small>{a.app.category} <span>·</span> {a.app.chainId === 8453 ? 'Base' : `Chain ${a.app.chainId}`}</small></td><td>{number(a.wallets)}</td><td>{number(a.confirmed)}</td><td><Badge tone={a.success >= 90 ? 'green' : 'orange'}>{a.confirmed + a.failed ? percent(a.success) : '—'}</Badge></td><td><div className="mini-bars" title="Daily events over the last 10 days">{daily.map((count, i) => <i key={i} style={{ height: `${count / max * 100}%`, background: a.app.color, opacity: i > 6 ? 1 : 0.35 }} />)}</div></td></tr>; })}</tbody></table></div> : <Empty action={<button className="button primary" onClick={w.onAddApp}>Connect your first app</button>} />}
+      </Card>
+      <Card className="recent-events"><CardHead title="Recent activity" subtitle={w.mode === 'demo' ? 'A preview of your event stream' : 'Latest events from PostHog'} action={<span className="pulse-dot" />} />
+        <div className="feed">{w.events.slice(0, 5).map((e, i) => <button key={e.id} onClick={() => w.setView('Events')}><span className={`feed-icon feed-${i % 3}`}>{e.event.startsWith('tx_') ? <ArrowLeftRight size={15} /> : e.event === 'wallet_connected' ? <Wallet size={15} /> : <MousePointer2 size={15} />}</span><span><strong>{e.event.replaceAll('_', ' ').replace('$', '')}</strong><small>{w.apps.find(a => a.id === e.appId)?.name ?? e.appId} <span>·</span> {timeAgo(e.timestamp)}</small></span><ChevronRight size={14} /></button>)}{!w.events.length && <Empty />}</div><button className="text-button feed-link" onClick={() => w.setView('Events')}>Explore all events<ArrowRight size={14} /></button>
+      </Card>
+    </div>
+    <div className="insight-banner"><span className="insight-icon"><Sparkles size={20} /></span><div><strong>Every app has a story. Connect yours.</strong><p>One lightweight SDK for swaps, mints, submissions, and everything in between.</p></div><button className="button secondary" onClick={() => w.setView('Integration')}>Explore the SDK<ArrowUpRight size={15} /></button><Globe className="banner-globe" size={115} strokeWidth={0.5} /></div>
+  </>;
+}
