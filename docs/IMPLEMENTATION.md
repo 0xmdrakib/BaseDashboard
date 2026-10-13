@@ -3,15 +3,15 @@
 | Files | Purpose |
 | --- | --- |
 | `app/page.tsx`, `app/layout.tsx`, `app/globals.css`, `public/favicon.svg` | Entry, metadata, responsive design and brand. |
-| `components/orbit/dashboard.tsx` | Navigation, demo/live separation, filters, refresh, search, stale-request protection and responsive shell. |
+| `components/orbit/dashboard.tsx` | Navigation, production data, filters, refresh, search, stale-request protection and responsive shell. |
 | `components/orbit/overview.tsx` | Metrics, data-derived charts/sparklines, portfolio and activity stream. |
 | `components/orbit/activity.tsx` | Events, details, transactions and source attribution. |
 | `components/orbit/audiences.tsx` | Ordered funnels, saved journeys and mature-cohort retention. |
 | `components/orbit/apps.tsx` | App registration, editing, archive and restore. |
-| `components/orbit/integration.tsx` | App-specific SDK examples, downloads, event catalog and sandbox. |
+| `components/orbit/integration.tsx` | App-specific SDK examples, downloads and event catalog. |
 | `components/orbit/settings.tsx` | Persisted workspace settings and connection diagnostics. |
 | `components/orbit/ui.tsx` | Accessible dialogs, controls, exports and API client. |
-| `lib/types.ts`, `lib/demo.ts`, `lib/analytics.ts`, `lib/server.ts` | Contracts, isolated samples, analytics calculations and authenticated server helpers. |
+| `lib/types.ts`, `lib/analytics.ts`, `lib/server.ts` | Contracts, analytics calculations and authenticated server helpers. |
 | `app/api/*/route.ts` | Owner-scoped configuration, apps, settings, funnels and private PostHog reads. |
 | `db/schema.ts`, `drizzle/*.sql`, `drizzle/meta/*` | Owner-scoped schema and append-only migrations. |
 | `packages/sdk/*` | Typed SDK, React/wagmi adapter, privacy filter and package documentation. |

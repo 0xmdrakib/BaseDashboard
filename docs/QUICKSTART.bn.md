@@ -4,12 +4,12 @@ Orbit তোমার সব mini app-এর জন্য একটি কেন
 
 প্রস্তুত আছে: Overview, Applications, Event explorer, Transaction ledger, ordered
 Funnel builder ও saved journeys, Retention, Acquisition, CSV exports, SDK downloads,
-Integration guide, local event sandbox এবং private durable workspace।
+Integration guide এবং private durable workspace।
 
 ## নিজের অ্যাপ যুক্ত করা
 
-Demo workspace-এর চারটি অ্যাপ ও তথ্য উদাহরণ। এগুলো PostHog-এ পাঠানো হয় না।
-`Set up your workspace` দিয়ে নিজের workspace-এ যাও।
+Workspace-এ শুধু নিজের নিবন্ধিত অ্যাপ এবং PostHog-এর আসল production events দেখা যাবে।
+অ্যাপ যুক্ত করার আগে তালিকা খালি এবং count শূন্য থাকবে। `Set up PostHog` দিয়ে শুরু করো।
 
 ১. নিজের PostHog project তৈরি করো বা বিদ্যমান project ব্যবহার করো।
 ২. Orbit Settings-এ project ID, region ও public project token দাও।

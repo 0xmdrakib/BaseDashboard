@@ -52,8 +52,9 @@ Open **Activity → Live events** in the matching project. Filter by `app_id` an
   raw error or person-property payload. Configure PostHog's Discard IP data setting
   if you do not want PostHog to retain IP data.
 
-Then select Your workspace in Orbit, set matching filters and refresh. Demo data is
-isolated and never sent to PostHog. Test transactions should use testnet first.
+Then open Orbit, set matching filters and refresh. The dashboard displays only your
+registered applications and production events. Until connected, lists are empty and
+counts are zero. Test transactions should use testnet first.
 
 ## Quality checks
 
