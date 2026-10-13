@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Orbit — Mini app analytics",
+  title: "Orbit Analytics",
   description: "A clearer view of your ecosystem. Wallets, transactions, and product analytics across all your mini apps.",
   icons: {
     icon: "/favicon.svg",
