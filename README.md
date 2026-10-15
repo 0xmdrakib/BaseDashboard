@@ -1,89 +1,125 @@
-# Orbit · Mini app analytics
+# BaseDashboard
 
-A private, multi-app analytics workspace with a reusable PostHog SDK. Built with
-React 19, TypeScript, Vinext, Cloudflare D1, Recharts and Sites.
+BaseDashboard, displayed in the app as **Orbit Analytics**, is a private analytics workspace for understanding wallets, transactions, and product activity across all your mini apps.
 
-[বাংলা quick start](docs/QUICKSTART.bn.md) · [Implementation map](docs/IMPLEMENTATION.md)
+Live app: [Orbit Analytics](https://orbit-miniapp-intelligence.grand-jay-6428.chatgpt.site) · Owner sign-in is required.
 
-## Local development
+---
 
-Requires Node.js 22.13+. From this directory:
+## Overview
+
+BaseDashboard is built for two core flows:
+
+- **One workspace for every app:** register your applications and explore their real production activity together or individually.
+- **One reusable integration:** use the included PostHog SDK to track wallet connections, swaps, mints, submissions, and other interactions in each app.
+
+The dashboard keeps configuration and saved funnels in Cloudflare D1. Your apps send events directly to PostHog; the authenticated dashboard reads them using a server-only API key. Empty workspaces start with zero counts and no demo data.
+
+## Features
+
+- Guided application registration with URL normalization, unique tracking IDs, custom networks, and application colors
+- Ecosystem overview with active wallets, confirmed transactions, success rates, and activity charts
+- Searchable event explorer with event details and CSV exports
+- Transaction ledger with pending, confirmed, and failed states
+- Ordered funnel builder with saved journeys and conversion windows
+- Wallet retention cohorts and campaign/source attribution
+- Application editing, archiving, and restoration
+- Shared app and date filters with UTC calendar ranges
+- PostHog connection settings, event verification, and optional two-minute refresh
+- Typed SDK, React/wagmi adapter, and a standalone browser bundle
+- Responsive desktop and mobile interface with private workspace access
+
+## Supported networks
+
+- Base and Base Sepolia
+- Ethereum
+- Optimism
+- Arbitrum
+- Polygon
+- Other EVM networks through a custom numeric chain ID
+
+Analytics follows the events your application sends. BaseDashboard does not index a blockchain, execute transactions, sign wallet requests, or add Base Builder Codes to transactions.
+
+## Analytics behavior
+
+### Wallets and transactions
+
+Wallet addresses are normalized to lowercase. Account changes and disconnects reset analytics identity. Reconnecting states do not reset it.
+
+A submitted hash produces `tx_submitted`. A receipt with status `success` produces `tx_confirmed`. Rejected requests, errors, and reverted receipts produce `tx_failed` with a sanitized error message. Pending submissions are excluded from the resolved success rate.
+
+### Product interactions
+
+The SDK supports `app_opened`, history-based page views, masked autocapture, `wallet_connected`, `wallet_disconnected`, `form_submitted`, and named `interaction` events. Use actions such as `swap`, `mint`, `deposit`, `claim`, `vote`, or `contract_interaction` to describe what your app actually does.
+
+### Funnels, retention, and attribution
+
+Funnels require ordered events from the same visitor in the same app. Retention uses wallets first observed in the loaded history. Acquisition uses the first observed source within the selected period. Queries include only registered app IDs and production events, with a visible warning when the 50,000-event limit is reached.
+
+## Privacy
+
+Wallet address is the only explicit end-user analytics identifier. The SDK filters sensitive properties, masks DOM text and attributes, excludes form field values and URL query strings, and disables session recording. Emails, names, government IDs, payment details, and raw error messages must never be passed to analytics.
+
+Your PostHog personal API key stays on the dashboard server. Public project tokens belong in each mini app's public environment variables. Configure PostHog's IP-discard setting separately if you do not want it to retain IP data.
+
+## Tech stack
+
+- React 19 and TypeScript
+- Vinext, Vite, and Next.js-compatible application APIs
+- Tailwind CSS and custom CSS
+- Cloudflare Workers and D1
+- Drizzle ORM
+- PostHog JavaScript SDK
+- Recharts and Lucide icons
+- Node.js test runner and GitHub Actions
+
+## Getting started
+
+Requires Node.js 22.13 or newer and npm. CI uses Node.js 24.
 
 ```sh
+git clone https://github.com/0xmdrakib/BaseDashboard.git
+cd BaseDashboard
 npm ci
 npm run build
-# Apply each local migration once, in order:
-node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_lame_fabian_cortez.sql
-node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0001_solid_sheva_callister.sql
+```
+
+Apply the local database migrations once, then start the app. Follow the commands in [Setup and verification](docs/SETUP.md).
+
+```sh
 npm run dev
 ```
 
-Open the printed URL. Local mock sign-in is `/signin-with-chatgpt?return_to=/`.
-Hosted authentication is platform-owned; the Site is private.
+Register an application, configure your PostHog connection, and follow the personalized integration guide. The SDK downloads are generated during the build; they are not published to npm.
 
-## Connect PostHog
-
-Use **Connect app** to enter an application name and URL. Orbit suggests a unique
-tracking ID; expand **Customize application** for your category, network, color or
-custom ID. Review, add the app, then open its personalized integration guide.
-Full URLs are normalized to domains and paths/query strings are discarded.
-
-1. Create or select your PostHog project.
-2. Save project ID, region and **public** project token in Orbit Settings.
-3. Configure `POSTHOG_PERSONAL_API_KEY` as a **secret runtime environment variable**
-   on this private Site, scoped to `query:read` for the intended PostHog project.
-   Locally put it in ignored `.dev.vars` and restart the server.
-4. Register an app and follow its Integration guide. Download the SDK archive and
-   install it with `npm install ./orbit-analytics-sdk-1.0.0.tgz`, or serve the standalone
-   `orbit.js` bundle from your own app. The package is not published to npm.
-5. Use public app-side environment variables as shown in `.env.example`.
-   Never put the private read key in a mini app or client bundle.
-6. Use `environment: 'development'` or `'staging'` for non-production apps. Orbit reads
-   only `'production'` events so local tests do not inflate live metrics.
-
-## Verify events in PostHog
-
-Open **Activity → Live events** in the matching project. Filter by `app_id` and check:
-
-- App load: `app_opened`, sanitized referrer/UTM metadata and `$pageview`.
-- Client route change: another `$pageview`.
-- Wallet connect: `wallet_connected` and lowercase wallet identity. Disconnect and
-  account switch reset identity without merging two wallets.
-- Accepted request: `tx_submitted`. Successful receipt: `tx_confirmed`.
-  Rejection/error/revert: one `tx_failed` with a safe message.
-- Form submit: logical `form_id` and outcome only, without field values.
-- Every event: correct `app_id`, `environment` and `sdk_version`.
-- No email, display name, form body, payment details, URL query/path, DOM text,
-  raw error or person-property payload. Configure PostHog's Discard IP data setting
-  if you do not want PostHog to retain IP data.
-
-Then open Orbit, set matching filters and refresh. The dashboard displays only your
-registered applications and production events. Until connected, lists are empty and
-counts are zero. Test transactions should use testnet first.
+- [Setup and verification](docs/SETUP.md)
+- [বাংলা quick start](docs/QUICKSTART.bn.md)
+- [Deployment guide](docs/DEPLOYMENT.md)
+- [SDK documentation](packages/sdk/README.md)
+- [Implementation map](docs/IMPLEMENTATION.md)
 
 ## Quality checks
 
 ```sh
 npm run typecheck
 npm test
+npm run build
 # With the local development server running:
 npm run test:api
-npm run build
 ```
 
-SDK tests use a local PostHog double. API tests reject non-loopback targets, use
-development mock auth and local records, archive test applications, and restore
-workspace settings. Never target production with mutation tests.
+GitHub Actions runs these checks against a fresh local database. API mutation tests reject non-loopback targets and never run against your production workspace.
 
-## Publishing and limits
+## Deployment
 
-Use the Sites source helper to push and package, then its private deployment tool.
-Sites applies production migrations. Preserve `.openai/hosting.json` identity and
-owner-only audience. Configure secrets through the native runtime settings.
+GitHub hosts the source and CI workflow. The application requires a Cloudflare Workers-compatible server, a D1 database, and trusted authentication; GitHub Pages cannot run this backend.
 
-Queries return up to 50,000 events with an explicit warning when capped; retention is
-first-observed in loaded history. See the implementation map for details. Actual
-PostHog connectivity requires your project/read key and instrumentation of your apps.
+The existing live workspace is hosted privately on Sites. Its source retains the hosting adapter and project identity needed for updates. See the [deployment guide](docs/DEPLOYMENT.md) before deploying your own instance.
 
-Continue appending Base Builder Codes with your existing transaction library.
-Orbit measures activity; it never sends or signs a transaction.
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE). The retained Sites Vite adapter includes its [upstream MIT notice](build/sites-vite-plugin.LICENSE).
+
+**© 2026 Md. Rakib • made with love and passion.**

@@ -17,13 +17,14 @@
 | `app/api/*/route.ts` | Owner-scoped configuration, apps, settings, funnels and private PostHog reads. |
 | `db/schema.ts`, `drizzle/*.sql`, `drizzle/meta/*` | Owner-scoped schema and append-only migrations. |
 | `packages/sdk/*` | Typed SDK, React/wagmi adapter, privacy filter and package documentation. |
-| `scripts/build-sdk.mjs`, `public/sdk/*` | Reproducible browser bundle, ESM/types and downloadable package. |
+| `scripts/build-sdk.mjs`, generated `public/sdk/*` | Reproducible browser bundle, ESM/types and downloadable package. |
 | `tests/*` | SDK lifecycle/privacy, analytics and local API integration verification. |
 | `.env.example`, `.gitignore`, `package.json`, `package-lock.json`, `vite.config.ts`, `.openai/hosting.json` | Configuration, dependency lock, runtime and private hosting. |
-| `README.md`, `docs/*` | Setup, verification and Bengali quick start. |
+| `README.md`, `docs/*` | Project overview, setup, deployment, verification and Bengali quick start. |
 
-Remaining files come from the maintained Sites/Vinext starter. Its platform-owned
-authentication, Worker adapter and connector infrastructure are retained.
+The required Sites/Vinext authentication, Worker adapter and portable build scripts
+are retained. Unused UI templates, placeholder assets, connector preview services
+and their dependencies have been removed. SDK downloads are generated at build time.
 
 ## Data boundaries
 

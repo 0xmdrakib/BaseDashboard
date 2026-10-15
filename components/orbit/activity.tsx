@@ -1,6 +1,6 @@
 'use client';
 import { useMemo, useState } from 'react';
-import { Search, Download, SlidersHorizontal, ArrowUpRight, Activity, Wallet, ArrowLeftRight, CircleCheck, ExternalLink, Filter } from 'lucide-react';
+import { Search, Download, SlidersHorizontal, ArrowUpRight, Activity, Wallet, ArrowLeftRight, CircleCheck, ExternalLink } from 'lucide-react';
 import { Card, CardHead, AppName, Badge, Empty, Modal, CopyButton, Pagination, downloadCsv, timeAgo, type Workspace } from './ui';
 import { number, percent, shortAddress, transactions, metrics, acquisition } from '@/lib/analytics';
 import { walletPattern, type OrbitEvent } from '@/lib/types';

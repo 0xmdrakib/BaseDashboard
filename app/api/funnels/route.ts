@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { eq, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { getDb } from '@/db';
 import { savedFunnels } from '@/db/schema';
 import { getChatGPTUser } from '@/app/chatgpt-auth';

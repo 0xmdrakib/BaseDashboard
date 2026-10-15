@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Check, ShieldCheck, ArrowUpRight, Database, Globe2, RefreshCw, CheckCircle2, Circle, Info, Loader2, ExternalLink } from 'lucide-react';
 import { defaultSettings, type WorkspaceSettings } from '@/lib/types';
-import { Card, CardHead, Badge, CodeBlock, SubmitButton, api, type Workspace } from './ui';
+import { Card, CardHead, Badge, SubmitButton, api, type Workspace } from './ui';
 export function Settings({ w }: { w: Workspace }) {
   const [form, setForm] = useState<WorkspaceSettings>(w.config?.settings ?? defaultSettings); const [busy, setBusy] = useState(false); const [testing, setTesting] = useState(false); const [error, setError] = useState(''); const [test, setTest] = useState('');
   const connectionChanged = form.projectId.trim() !== (w.config?.settings.projectId ?? '') || form.publicKey.trim() !== (w.config?.settings.publicKey ?? '') || form.region !== w.config?.settings.region;

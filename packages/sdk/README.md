@@ -80,3 +80,7 @@ tracking. If IP retention is unwanted, configure PostHog's Discard IP data setti
 
 Continue appending Builder Codes with your app's transaction library. Orbit does
 not modify, send, sign or request a transaction, and never needs a private wallet key.
+
+## License
+
+[MIT License](LICENSE) · Copyright (c) 2026 Md. Rakib.

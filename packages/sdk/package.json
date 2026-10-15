@@ -1,6 +1,42 @@
 {
-  "name": "@orbit-analytics/sdk", "version": "1.0.0", "type": "module", "description": "Privacy-conscious analytics for your mini app ecosystem.",
-  "main": "./dist/index.js", "types": "./dist/index.d.ts", "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" }, "./react": { "types": "./dist/react.d.ts", "import": "./dist/react.js" } },
-  "files": ["dist", "README.md"], "sideEffects": false,
-  "dependencies": { "posthog-js": "^1.438.9" }, "peerDependencies": { "react": ">=18" }, "peerDependenciesMeta": { "react": { "optional": true } }
+  "name": "@orbit-analytics/sdk",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Privacy-conscious analytics for your mini app ecosystem.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "dependencies": {
+    "posthog-js": "^1.438.9"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "license": "MIT",
+  "author": "Md. Rakib",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/0xmdrakib/BaseDashboard.git",
+    "directory": "packages/sdk"
+  }
 }
