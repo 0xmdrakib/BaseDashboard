@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     const registered = (await getApps(owner)).map(a => a.id).filter(id => appIdPattern.test(id)).sort();
     if (app && !registered.includes(app)) throw new HttpError(404, 'Register this application in your workspace first.');
     const key = `v3:${owner}:${settings.region}:${settings.projectId}:${days}:${app}:${registered.join(',')}`;
-    const cached = url.searchParams.get('refresh') === '1' ? undefined : await getDb().select().from(queryCache).where(eq(queryCache.key, key)).get();
+    const cached = url.searchParams.get('refresh') === '1' ? undefined : (await getDb().select().from(queryCache).where(eq(queryCache.key, key)).limit(1))[0];
     if (cached && cached.expiresAt > Date.now()) return Response.json({ ...JSON.parse(cached.payload), cached: true }, { headers: { 'Cache-Control': 'private, no-store' } });
     const from = new Date(Date.now() - Math.max(days * 2, 90) * 86400000).toISOString(); const to = new Date().toISOString();
     const appFilter = app ? `properties.app_id = '${app}'` : registered.length ? `properties.app_id IN (${registered.map(id => `'${id}'`).join(',')})` : '1 = 0';
@@ -38,7 +38,7 @@ export async function GET(request: Request) {
     });
     const payload: DataResponse = { events, truncated: body.results.length >= 50000, cached: false, fetchedAt: new Date().toISOString(), from, to };
     const serialized = JSON.stringify(payload);
-    // Keep cache values below D1's row limit; large datasets still return normally.
+    // Keep cached payloads small; large datasets still return normally.
     if (new TextEncoder().encode(serialized).byteLength < 1000000) await getDb().insert(queryCache).values({ key, payload: serialized, expiresAt: Date.now() + 120000 }).onConflictDoUpdate({ target: queryCache.key, set: { payload: serialized, expiresAt: Date.now() + 120000 } });
     return Response.json(payload, { headers: { 'Cache-Control': 'private, no-store' } });
   } catch (error) { return responseError(error); }

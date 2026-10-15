@@ -1,6 +1,8 @@
 # BaseDashboard
 
-BaseDashboard is a unified analytics dashboard for Base and EVM mini apps, presented as **Orbit Analytics**. Understand wallet activity, transactions, and user journeys across your applications in one workspace.
+BaseDashboard is an analytics dashboard for builders on Base. Understand wallet activity, transactions, and user journeys across the applications you build, all in one workspace.
+
+Live app: [https://builders.rakibhq.xyz](https://builders.rakibhq.xyz)
 
 ---
 
@@ -57,10 +59,10 @@ Wallet address is the only explicit end-user analytics identifier. Sensitive pro
 ## Tech stack
 
 - React 19 and TypeScript
-- Vinext, Vite, and Next.js-compatible application APIs
+- Next.js
 - Tailwind CSS and custom CSS
-- Cloudflare Workers and D1
-- Drizzle ORM
+- PostgreSQL and Drizzle ORM
+- Vercel
 - PostHog JavaScript SDK
 - Recharts and Lucide icons
 
@@ -68,6 +70,4 @@ Wallet address is the only explicit end-user analytics identifier. Sensitive pro
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE). The retained Sites Vite adapter includes its [upstream MIT notice](build/sites-vite-plugin.LICENSE).
-
-**© 2026 Md. Rakib • made with love and passion.**
+This project is licensed under the [MIT License](LICENSE).

@@ -5,8 +5,8 @@ import { pathToFileURL } from 'node:url';
 import path from 'node:path';
 import { cleanProperties, safeError } from '../packages/sdk/src/privacy';
 import type { PostHog } from './fake-posthog';
-await build({ entryPoints: ['packages/sdk/src/index.ts'], bundle: true, platform: 'node', format: 'esm', outfile: '.sites-runtime/test-sdk.mjs', alias: { 'posthog-js': path.resolve('tests/fake-posthog.ts') } });
-const sdk: typeof import('../packages/sdk/src/index') = await import(pathToFileURL(path.resolve('.sites-runtime/test-sdk.mjs')).href);
+await build({ entryPoints: ['packages/sdk/src/index.ts'], bundle: true, platform: 'node', format: 'esm', outfile: 'outputs/test-sdk.mjs', alias: { 'posthog-js': path.resolve('tests/fake-posthog.ts') } });
+const sdk: typeof import('../packages/sdk/src/index') = await import(pathToFileURL(path.resolve('outputs/test-sdk.mjs')).href);
 const global = globalThis as typeof globalThis & { orbitTestClients: PostHog[] };
 let sequence = 0;
 function create(extra: Record<string, unknown> = {}) { const tracker = sdk.createOrbit({ appId: `test-app-${sequence++}`, projectKey: 'phc_test_public', ...extra }); return { tracker, client: global.orbitTestClients.at(-1)! }; }

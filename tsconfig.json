@@ -28,8 +28,7 @@
       ]
     },
     "types": [
-      "node",
-      "@cloudflare/workers-types"
+      "node"
     ]
   },
   "include": [
@@ -41,6 +40,9 @@
     "**/*.mts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "build",
+    "vite.config.ts",
+    "cloudflare-env.d.ts"
   ]
 }

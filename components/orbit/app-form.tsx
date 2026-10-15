@@ -78,7 +78,7 @@ export function AppForm({ w, app, onClose }: { w: Workspace; app?: OrbitApp; onC
               <div className="connect-review"><div><span>Application</span><strong>{preview.name}</strong></div><div><span>Domain</span><strong>{domain}</strong></div><div><span>Tracking ID</span><code>{id}</code></div><div><span>Category</span><strong>{form.category}</strong></div><div><span>Network</span><strong>{networkName(form.chainId)}</strong></div></div>
               {!app && <div className="connect-next"><Code2 size={19} /><div><strong>Next, add the SDK to your app.</strong><p>Your personalized guide will use this app’s ID and network. Events will appear after your integration sends them.</p></div></div>}
             </>}
-            {error && <div className="form-error" role="alert">{error}{!w.config?.authenticated && <a href="/signin-with-chatgpt?return_to=/" target="_top">Sign in to your workspace</a>}</div>}
+            {error && <div className="form-error" role="alert">{error}</div>}
           </div></div>
         <div className="modal-footer connect-footer"><span><ShieldCheck size={14} />Private to your workspace</span><button type="button" className="button secondary" disabled={busy} onClick={() => step === 'review' ? setStep('details') : onClose()}>{step === 'review' ? <><ArrowLeft size={14} />Back</> : 'Cancel'}</button><button className="button primary" type="submit" disabled={busy}>{busy ? <><Loader2 size={15} className="spin" />Saving application…</> : step === 'details' ? <>Review application<ArrowRight size={15} /></> : app ? <>Save changes<Check size={15} /></> : <>Add application<ArrowRight size={15} /></>}</button></div>
       </> : <>

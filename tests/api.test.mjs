@@ -1,26 +1,41 @@
-import { test, before, after } from 'node:test';
+import { test } from 'node:test';
 import assert from 'node:assert/strict';
 const base = process.env.ORBIT_TEST_URL || 'http://127.0.0.1:5173';
-if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(base)) throw new Error('API mutation tests are restricted to a local development server.');
-let cookie = ''; let original; const app = { id: 'qa-' + Date.now().toString(36), name: 'Orbit QA app', domain: 'qa.example', category: 'Utility', color: '#157b72', chainId: 8453, description: 'Local automated verification', builderCode: '', archived: false };
-const call = (path, method = 'GET', body, auth = true, origin = base) => fetch(base + path, { method, headers: { ...(auth ? { Cookie: cookie } : {}), Origin: origin, 'Content-Type': 'application/json' }, ...(body ? { body: JSON.stringify(body) } : {}) });
-before(async () => { const login = await fetch(base + '/signin-with-chatgpt?return_to=/', { redirect: 'manual' }); cookie = login.headers.getSetCookie().map(v => v.split(';')[0]).join('; '); assert.ok(cookie, 'Local sign-in should issue a development cookie'); const config = await (await call('/api/config')).json(); assert.equal(config.authenticated, true); original = config.settings; });
-after(async () => { if (original) await call('/api/settings', 'PUT', original); await call('/api/apps', 'PATCH', { ...app, archived: true }); });
-test('anonymous configuration is safe and does not contain secrets', async () => { const r = await call('/api/config', 'GET', undefined, false); const c = await r.json(); assert.equal(c.authenticated, false); assert.deepEqual(c.apps, []); assert.equal(JSON.stringify(c).includes('PERSONAL_API_KEY'), false); });
-test('unauthenticated app writes are rejected', async () => { assert.equal((await call('/api/apps', 'POST', app, false)).status, 401); });
-test('cross-origin app writes are rejected', async () => { assert.equal((await call('/api/apps', 'POST', app, true, 'https://untrusted.example')).status, 403); });
-test('malformed app IDs are rejected', async () => { assert.equal((await call('/api/apps', 'POST', { ...app, id: "bad'app" })).status, 400); });
-test('domain credentials and query strings are rejected', async () => { assert.equal((await call('/api/apps', 'POST', { ...app, domain: 'https://user:pass@example.com/?email=private' })).status, 400); });
-test('an application can be registered and retrieved', async () => { assert.equal((await call('/api/apps', 'POST', app)).status, 201); const c = await (await call('/api/config')).json(); assert.ok(c.apps.some(a => a.id === app.id && a.name === app.name)); });
-test('pasted URLs are stored as domains and custom chain IDs persist', async () => {
-  assert.equal((await call('/api/apps', 'PATCH', { ...app, domain: 'https://APP.example.com/mint?private=value#connect', chainId: 999 })).status, 200);
-  const config = await (await call('/api/config')).json(); const saved = config.apps.find(a => a.id === app.id);
-  assert.equal(saved.domain, 'app.example.com'); assert.equal(saved.chainId, 999); assert.equal(saved.id, app.id);
+if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(base)) throw new Error('API tests are restricted to a local server.');
+const call = (path, method = 'GET', body, extra = {}) => fetch(base + path, {
+  method, headers: { Origin: base, 'Content-Type': 'application/json', ...extra },
+  ...(body ? { body: JSON.stringify(body) } : {}),
 });
-test('duplicate app IDs are rejected', async () => { assert.equal((await call('/api/apps', 'POST', app)).status, 409); });
-test('application updates preserve identity and archive is reversible', async () => { assert.equal((await call('/api/apps', 'PATCH', { ...app, archived: true })).status, 200); let c = await (await call('/api/config')).json(); assert.equal(c.apps.find(a => a.id === app.id).archived, true); assert.equal((await call('/api/apps', 'PATCH', app)).status, 200); });
-test('settings reject a private token in the public token field', async () => { assert.equal((await call('/api/settings', 'PUT', { ...original, publicKey: 'phx_private_never_save' })).status, 400); });
-test('workspace settings persist', async () => { assert.equal((await call('/api/settings', 'PUT', { ...original, name: 'Orbit API verification' })).status, 200); const c = await (await call('/api/config')).json(); assert.equal(c.settings.name, 'Orbit API verification'); });
-test('missing PostHog configuration produces an actionable response', async () => { const r = await call('/api/analytics?days=7'); assert.equal(r.status, 409); assert.match((await r.json()).error, /Connect PostHog/); });
-test('ordered funnel definitions can be saved and reloaded', async () => { const r = await call('/api/funnels', 'POST', { name: 'Local QA journey', steps: ['app_opened', 'wallet_connected', 'tx_confirmed'], windowHours: 24, appId: '' }); assert.equal(r.status, 201); const { id } = await r.json(); const saved = await (await call('/api/funnels')).json(); assert.deepEqual(saved.find(f => f.id === id).steps, ['app_opened', 'wallet_connected', 'tx_confirmed']); });
-test('invalid funnel definitions are rejected', async () => { assert.equal((await call('/api/funnels', 'POST', { name: 'Invalid journey', steps: ['app_opened'], windowHours: 24, appId: '' })).status, 400); });
+const forgedIdentity = { 'oai-authenticated-user-id': 'forged-owner', 'oai-authenticated-user-email': 'forged@example.com' };
+
+test('an unconfigured workspace returns empty data without reading private configuration', async () => {
+  const response = await call('/api/config'); const data = await response.json();
+  assert.equal(response.status, 200); assert.equal(data.authenticated, false);
+  assert.deepEqual(data.apps, []); assert.equal(data.connection.configured, false);
+  assert.equal(data.connection.hasReadKey, false); assert.equal(data.connection.projectId, '');
+  assert.match(response.headers.get('cache-control'), /no-store/);
+});
+test('client-supplied platform identity headers never authenticate a visitor', async () => {
+  const response = await call('/api/config', 'GET', undefined, forgedIdentity);
+  assert.equal((await response.json()).authenticated, false);
+});
+for (const [path, method] of [['/api/apps', 'POST'], ['/api/apps', 'PATCH'], ['/api/settings', 'PUT'], ['/api/funnels', 'POST']]) {
+  test(`${method} ${path} rejects unauthenticated writes before accessing the database`, async () => {
+    const response = await call(path, method, {}, forgedIdentity);
+    assert.equal(response.status, 401); assert.match((await response.json()).error, /Sign-in is not configured/);
+  });
+}
+test('analytics reads require a verified identity even with forged headers', async () => {
+  assert.equal((await call('/api/analytics?days=7', 'GET', undefined, forgedIdentity)).status, 401);
+});
+test('anonymous funnel reads reveal no saved journeys', async () => {
+  const response = await call('/api/funnels'); assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), []); assert.match(response.headers.get('cache-control'), /no-store/);
+});
+test('cross-origin writes are rejected', async () => {
+  assert.equal((await call('/api/apps', 'POST', {}, { Origin: 'https://untrusted.example' })).status, 403);
+});
+test('the generated SDK download is served by the production application', async () => {
+  const response = await call('/sdk/orbit-analytics-sdk-1.0.0.tgz');
+  assert.equal(response.status, 200); assert.ok((await response.arrayBuffer()).byteLength > 1000);
+});

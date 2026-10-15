@@ -1,6 +1,6 @@
 # Orbit Analytics SDK
 
-Typed PostHog analytics for mini apps. Install the downloaded archive:
+Typed PostHog analytics for applications built by Base builders. Install the downloaded archive:
 
 ```sh
 npm install ./orbit-analytics-sdk-1.0.0.tgz

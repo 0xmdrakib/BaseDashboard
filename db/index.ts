@@ -1,13 +1,22 @@
-import { env } from "cloudflare:workers";
-import { drizzle } from "drizzle-orm/d1";
+import { Pool } from "pg";
+import { attachDatabasePool } from "@vercel/functions";
+import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "./schema";
 
-export function getDb() {
-  if (!env.DB) {
-    throw new Error(
-      "Cloudflare D1 binding `DB` is unavailable. Set the `d1` field in .openai/hosting.json to `DB` or let your control plane inject the real binding values before using the database."
-    );
-  }
+let pool: Pool | undefined;
 
-  return drizzle(env.DB, { schema });
+export function getDb() {
+  if (!process.env.DATABASE_URL?.trim()) {
+    throw new Error("Database connection is not configured.");
+  }
+  if (!pool) {
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      max: 3,
+      idleTimeoutMillis: 5000,
+      connectionTimeoutMillis: 10000,
+    });
+    if (process.env.VERCEL) attachDatabasePool(pool);
+  }
+  return drizzle(pool, { schema });
 }

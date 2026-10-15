@@ -2,7 +2,7 @@
   "name": "@orbit-analytics/sdk",
   "version": "1.0.0",
   "type": "module",
-  "description": "Privacy-conscious analytics for your mini app ecosystem.",
+  "description": "PostHog event tracking for applications built by Base builders.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {

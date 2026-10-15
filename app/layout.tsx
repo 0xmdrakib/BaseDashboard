@@ -4,7 +4,7 @@ import "./polish.css";
 
 export const metadata: Metadata = {
   title: "Orbit Analytics",
-  description: "A clearer view of your ecosystem. Wallets, transactions, and product analytics across all your mini apps.",
+  description: "An analytics dashboard for builders on Base. Understand wallets, transactions, and product activity across your applications.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
